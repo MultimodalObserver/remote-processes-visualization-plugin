@@ -1,5 +1,6 @@
 package mo;
 
+import mo.communication.ClientConnection;
 import mo.communication.Command;
 import mo.communication.ConnectionListener;
 import mo.communication.PetitionResponse;
@@ -25,6 +26,7 @@ public class RemoteProcessesVisualizationConfiguration implements VisualizableSt
 
     @Override
     public void onMessageReceived(Object o, PetitionResponse petitionResponse) {
+        System.out.println(petitionResponse);
         if(!petitionResponse.getType().equals(Command.DATA_STREAMING) || petitionResponse.getHashMap() == null){
             return;
         }
@@ -37,7 +39,8 @@ public class RemoteProcessesVisualizationConfiguration implements VisualizableSt
 
         EN MI CASO ME IMPORTA SOLO EL RENDER DE LA INFO QUE VIENE
          */
-        this.player.setCurrentEvent((String)captureEvent.getContent());
+        String data = String.valueOf(captureEvent.getContent());
+        this.player.setCurrentProcessesSnapshot(data);
 
     }
 
@@ -66,5 +69,10 @@ public class RemoteProcessesVisualizationConfiguration implements VisualizableSt
     @Override
     public Configuration fromFile(File file) {
         return null;
+    }
+
+    @Override
+    public void subscribeToConnection(ClientConnection cc){
+        cc.subscribeListener(this);
     }
 }

@@ -28,7 +28,7 @@ public class RemoteProcessesVisualizationPlugin implements VisualizationStreamin
     }
     @Override
     public String getName() {
-        return null;
+        return "Remote Processes Visualization";
     }
 
     @Override
@@ -38,8 +38,11 @@ public class RemoteProcessesVisualizationPlugin implements VisualizationStreamin
 
     @Override
     public Configuration initNewStreamingConfiguration(CaptureConfig captureConfig) {
-
-        return null;
+        System.out.println("ESTOY INICIALIZANDO UNA NUEVA CONFIGURACION DE STRAMING");
+        VisualizationConfiguration temporalConfig = new VisualizationConfiguration(captureConfig.getConfigID());
+        RemoteProcessesVisualizationConfiguration configuration = new RemoteProcessesVisualizationConfiguration(temporalConfig);
+        this.configurations.add(configuration);
+        return configuration;
     }
 
     @Override
