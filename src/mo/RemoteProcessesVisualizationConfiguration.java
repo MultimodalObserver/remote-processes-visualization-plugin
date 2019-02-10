@@ -15,7 +15,7 @@ import java.util.List;
 
 public class RemoteProcessesVisualizationConfiguration implements VisualizableStreamingConfiguration, ConnectionListener {
 
-    private static final String[] CREATORS = new String[] {"mo.controllers.ProcessRecorder"};
+    private static final String[] CREATORS = new String[] {"mo.plugin.ProcessRecorder"};
     private VisualizationConfiguration temporalConfig;
     private RemoteProcessesPlayer player;
 
