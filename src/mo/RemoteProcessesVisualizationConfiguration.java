@@ -41,7 +41,6 @@ public class RemoteProcessesVisualizationConfiguration implements VisualizableSt
          */
         String data = String.valueOf(captureEvent.getContent());
         this.player.setCurrentProcessesSnapshot(data);
-
     }
 
     @Override
@@ -71,8 +70,8 @@ public class RemoteProcessesVisualizationConfiguration implements VisualizableSt
         return null;
     }
 
-    @Override
+    /*@Override
     public void subscribeToConnection(ClientConnection cc){
         cc.subscribeListener(this);
-    }
+    }*/
 }
