@@ -15,7 +15,7 @@ import java.util.List;
 
 public class RemoteProcessesVisualizationConfiguration implements VisualizableStreamingConfiguration, ConnectionListener {
 
-    private static final String[] CREATORS = new String[] {"mo.plugin.ProcessRecorder"};
+    private static final String[] CREATORS = new String[] {"mo.capture.process.plugin.ProcessRecorder"};
     private VisualizationConfiguration temporalConfig;
     private RemoteProcessesPlayer player;
 
@@ -70,8 +70,8 @@ public class RemoteProcessesVisualizationConfiguration implements VisualizableSt
         return null;
     }
 
-    /*@Override
+
     public void subscribeToConnection(ClientConnection cc){
         cc.subscribeListener(this);
-    }*/
+    }
 }

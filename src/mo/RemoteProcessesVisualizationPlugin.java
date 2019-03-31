@@ -20,7 +20,7 @@ import java.util.List;
 )
 public class RemoteProcessesVisualizationPlugin implements VisualizationStreamingProvider {
 
-    private static final String[] CREATORS = new String[] {"mo.plugin.ProcessRecorder"};
+    private static final String[] CREATORS = new String[] {"mo.capture.process.plugin.ProcessRecorder"};
     List<Configuration> configurations;
 
     public RemoteProcessesVisualizationPlugin(){
