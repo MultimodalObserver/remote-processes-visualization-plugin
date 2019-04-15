@@ -5,6 +5,7 @@ import mo.communication.streaming.visualization.VisualizationStreamingProvider;
 import mo.core.plugin.Extends;
 import mo.core.plugin.Extension;
 import mo.organization.Configuration;
+import mo.visualization.process.plugin.model.VisualizationConfiguration;
 
 import java.util.ArrayList;
 import java.util.Arrays;

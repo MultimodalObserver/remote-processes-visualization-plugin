@@ -5,8 +5,10 @@ import com.google.gson.JsonParser;
 import mo.communication.streaming.visualization.PlayableStreaming;
 import mo.core.ui.dockables.DockableElement;
 import mo.core.ui.dockables.DockablesRegistry;
+import mo.visualization.process.plugin.view.RemoteProcessesPlayerPanel;
 
 import javax.swing.*;
+import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -15,20 +17,21 @@ public class RemoteProcessesPlayer implements PlayableStreaming {
     private static final Logger LOGGER = Logger.getLogger(RemoteProcessesPlayer.class.getName());
     private RemoteProcessesPlayerPanel panel;
     private JsonObject currentProcessesSnapshot;
-    private static final JsonParser JSON_PARSER = new JsonParser();
+    private JsonParser jsonParser;
 
     public RemoteProcessesPlayer(){
         System.out.println( "ESTOY CREANDO EL PLAYER REMOTO");
         this.panel = new RemoteProcessesPlayerPanel();
-        SwingUtilities.invokeLater(() -> {
-            try {
-                DockableElement e = new DockableElement();
-                e.add(this.panel);
-                DockablesRegistry.getInstance().addAppWideDockable(e);
-            } catch (Exception ex) {
-                LOGGER.log(Level.INFO, null, ex);
-            }
-        });
+        this.jsonParser = new JsonParser();
+        try {
+            SwingUtilities.invokeAndWait(() -> {
+                    DockableElement e = new DockableElement();
+                    e.add(this.panel);
+                    DockablesRegistry.getInstance().addAppWideDockable(e);
+            });
+        } catch (InterruptedException | InvocationTargetException e) {
+            LOGGER.log(Level.SEVERE, null, e);
+        }
     }
 
     @Override
@@ -47,7 +50,7 @@ public class RemoteProcessesPlayer implements PlayableStreaming {
     }
 
     public void setCurrentProcessesSnapshot(String data){
-        this.currentProcessesSnapshot = JSON_PARSER.parse(data).getAsJsonObject();
+        this.currentProcessesSnapshot = this.jsonParser.parse(data).getAsJsonObject();
         this.play();
     }
 }

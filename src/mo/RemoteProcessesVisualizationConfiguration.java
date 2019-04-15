@@ -8,6 +8,7 @@ import mo.communication.streaming.capture.CaptureEvent;
 import mo.communication.streaming.visualization.PlayableStreaming;
 import mo.communication.streaming.visualization.VisualizableStreamingConfiguration;
 import mo.organization.Configuration;
+import mo.visualization.process.plugin.model.VisualizationConfiguration;
 
 import java.io.File;
 import java.util.Arrays;
@@ -26,7 +27,6 @@ public class RemoteProcessesVisualizationConfiguration implements VisualizableSt
 
     @Override
     public void onMessageReceived(Object o, PetitionResponse petitionResponse) {
-        System.out.println(petitionResponse);
         if(!petitionResponse.getType().equals(Command.DATA_STREAMING) || petitionResponse.getHashMap() == null){
             return;
         }
@@ -40,7 +40,7 @@ public class RemoteProcessesVisualizationConfiguration implements VisualizableSt
         EN MI CASO ME IMPORTA SOLO EL RENDER DE LA INFO QUE VIENE
          */
         String data = String.valueOf(captureEvent.getContent());
-        this.player.setCurrentProcessesSnapshot(data);
+       this.player.setCurrentProcessesSnapshot(data);
     }
 
     @Override
@@ -70,7 +70,7 @@ public class RemoteProcessesVisualizationConfiguration implements VisualizableSt
         return null;
     }
 
-
+    @Override
     public void subscribeToConnection(ClientConnection cc){
         cc.subscribeListener(this);
     }

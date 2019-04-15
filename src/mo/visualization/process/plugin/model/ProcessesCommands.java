@@ -1,4 +1,4 @@
-package mo;
+package mo.visualization.process.plugin.model;
 
 public class ProcessesCommands {
 

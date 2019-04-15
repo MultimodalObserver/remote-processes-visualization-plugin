@@ -1,4 +1,4 @@
-package mo;
+package mo.visualization.process.plugin.view;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
