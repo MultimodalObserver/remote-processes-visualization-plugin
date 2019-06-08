@@ -30,17 +30,16 @@ public class RemoteProcessesVisualizationConfiguration implements VisualizableSt
         if(!petitionResponse.getType().equals(Command.DATA_STREAMING) || petitionResponse.getHashMap() == null){
             return;
         }
+        else if(petitionResponse.getType().equals("procesos")){
+            System.out.println(petitionResponse.getHashMap().get("actionResponse"));
+            return;
+        }
         CaptureEvent captureEvent = (CaptureEvent) petitionResponse.getHashMap().get("data");
-        System.out.println("ESTO LLEGO AL PLUGIN "+(String)captureEvent.getContent());
         if(!this.temporalConfig.getName().equals(captureEvent.getConfigId())){
             return;
         }
-        /* ESTO ES LO QUE QUEREMOS QUE SE HAGA EN EL PLAYER CUANDO SE RECIBE EL DATO
-
-        EN MI CASO ME IMPORTA SOLO EL RENDER DE LA INFO QUE VIENE
-         */
         String data = String.valueOf(captureEvent.getContent());
-       this.player.setCurrentProcessesSnapshot(data);
+        this.player.setCurrentProcessesSnapshot(data);
     }
 
     @Override

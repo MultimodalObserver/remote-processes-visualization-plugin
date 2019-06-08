@@ -20,7 +20,6 @@ public class RemoteProcessesPlayer implements PlayableStreaming {
     private JsonParser jsonParser;
 
     public RemoteProcessesPlayer(){
-        System.out.println( "ESTOY CREANDO EL PLAYER REMOTO");
         this.panel = new RemoteProcessesPlayerPanel();
         this.jsonParser = new JsonParser();
         try {
@@ -50,6 +49,9 @@ public class RemoteProcessesPlayer implements PlayableStreaming {
     }
 
     public void setCurrentProcessesSnapshot(String data){
+        if(this.panel.getStatus() == RemoteProcessesPlayerPanel.SELECTING_PROCESS){
+            return;
+        }
         this.currentProcessesSnapshot = this.jsonParser.parse(data).getAsJsonObject();
         this.play();
     }
