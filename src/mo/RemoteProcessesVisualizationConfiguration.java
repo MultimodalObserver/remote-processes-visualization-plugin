@@ -4,7 +4,6 @@ import mo.communication.ClientConnection;
 import mo.communication.Command;
 import mo.communication.ConnectionListener;
 import mo.communication.PetitionResponse;
-import mo.communication.streaming.capture.CaptureEvent;
 import mo.communication.streaming.visualization.PlayableStreaming;
 import mo.communication.streaming.visualization.VisualizableStreamingConfiguration;
 import mo.organization.Configuration;
@@ -27,10 +26,31 @@ public class RemoteProcessesVisualizationConfiguration implements VisualizableSt
 
     @Override
     public void onMessageReceived(Object o, PetitionResponse petitionResponse) {
-        if(!petitionResponse.getType().equals(Command.DATA_STREAMING) || petitionResponse.getHashMap() == null){
+        if(petitionResponse.getType().equals(Command.DATA_STREAMING)){
+            /* Vemos que tipo de mensaje recibimos:
+
+        - data --> info procesos enviada por el capturador
+        - success --> se ejecuto exitosamente la accion que se envio en el servidor
+        - error --> hubo error al ejecutar la accion
+         */
+            if(petitionResponse.getHashMap().containsKey("data")){
+                String jsonData = petitionResponse.getHashMap().get("data").toString();
+                this.player.setCurrentProcessesSnapshot(jsonData);
+            }
+            else if(petitionResponse.getHashMap().containsKey("success")){
+                //Manejamos el success
+                System.out.println(petitionResponse.getHashMap().get("success"));
+            }
+            else if(petitionResponse.getHashMap().containsKey("error")){
+                System.out.println(petitionResponse.getHashMap().get("error"));
+            }
+        }
+        /*if(!petitionResponse.getType().equals(Command.DATA_STREAMING)
+                && !petitionResponse.getType().equals("procesos")){
             return;
         }
         else if(petitionResponse.getType().equals("procesos")){
+            System.out.println("MENSAJE DE PROCESOS");
             System.out.println(petitionResponse.getHashMap().get("actionResponse"));
             return;
         }
@@ -40,6 +60,7 @@ public class RemoteProcessesVisualizationConfiguration implements VisualizableSt
         }
         String data = String.valueOf(captureEvent.getContent());
         this.player.setCurrentProcessesSnapshot(data);
+        */
     }
 
     @Override

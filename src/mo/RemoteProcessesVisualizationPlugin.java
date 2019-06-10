@@ -39,7 +39,6 @@ public class RemoteProcessesVisualizationPlugin implements VisualizationStreamin
 
     @Override
     public Configuration initNewStreamingConfiguration(CaptureConfig captureConfig) {
-        System.out.println("ESTOY INICIALIZANDO UNA NUEVA CONFIGURACION DE STREAMING");
         VisualizationConfiguration temporalConfig = new VisualizationConfiguration(captureConfig.getConfigID());
         RemoteProcessesVisualizationConfiguration configuration = new RemoteProcessesVisualizationConfiguration(temporalConfig);
         this.configurations.add(configuration);
