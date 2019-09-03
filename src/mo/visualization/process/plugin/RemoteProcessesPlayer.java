@@ -1,10 +1,10 @@
-package mo;
+package mo.visualization.process.plugin;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.Gson;
 import mo.communication.streaming.visualization.PlayableStreaming;
 import mo.core.ui.dockables.DockableElement;
 import mo.core.ui.dockables.DockablesRegistry;
+import mo.visualization.process.plugin.model.Snapshot;
 import mo.visualization.process.plugin.view.RemoteProcessesPlayerPanel;
 
 import javax.swing.*;
@@ -16,12 +16,13 @@ public class RemoteProcessesPlayer implements PlayableStreaming {
 
     private static final Logger LOGGER = Logger.getLogger(RemoteProcessesPlayer.class.getName());
     private RemoteProcessesPlayerPanel panel;
-    private JsonObject currentProcessesSnapshot;
-    private JsonParser jsonParser;
+    private Gson gson;
+    private Snapshot currentSnapshot;
 
-    public RemoteProcessesPlayer(){
+    RemoteProcessesPlayer(){
         this.panel = new RemoteProcessesPlayerPanel();
-        this.jsonParser = new JsonParser();
+        this.gson = new Gson();
+        this.currentSnapshot = null;
         try {
             SwingUtilities.invokeAndWait(() -> {
                     DockableElement e = new DockableElement();
@@ -35,7 +36,7 @@ public class RemoteProcessesPlayer implements PlayableStreaming {
 
     @Override
     public void play() {
-        this.panel.updateData(this.currentProcessesSnapshot);
+        this.panel.updateData(this.currentSnapshot);
     }
 
     @Override
@@ -48,11 +49,15 @@ public class RemoteProcessesPlayer implements PlayableStreaming {
 
     }
 
-    public void setCurrentProcessesSnapshot(String data){
+    void setCurrentProcessesSnapshot(String data){
         if(this.panel.getStatus() == RemoteProcessesPlayerPanel.SELECTING_PROCESS){
             return;
         }
-        this.currentProcessesSnapshot = this.jsonParser.parse(data).getAsJsonObject();
+        this.currentSnapshot = this.gson.fromJson(data, Snapshot.class);
         this.play();
+    }
+
+    RemoteProcessesPlayerPanel getPanel() {
+        return this.panel;
     }
 }

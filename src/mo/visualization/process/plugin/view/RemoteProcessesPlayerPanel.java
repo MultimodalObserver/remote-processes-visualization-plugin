@@ -1,82 +1,143 @@
 package mo.visualization.process.plugin.view;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import mo.RemoteProcessesPlayer;
-import mo.communication.ClientConnection;
-import mo.communication.PetitionResponse;
 import mo.core.I18n;
-import mo.visualization.process.plugin.model.ProcessRequest;
+import mo.visualization.process.plugin.model.Process;
+import mo.visualization.process.plugin.model.Snapshot;
+import mo.visualization.process.util.MessageSender;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.HashMap;
+import java.util.List;
 
 public class RemoteProcessesPlayerPanel extends JPanel {
-    private JsonObject processesSnapshotData;
-    private static final String CAPTURE_MILLISECONDS_KEY = "captureMilliseconds";
-    private static final String PID_KEY = "pid";
-    private static final String USER_NAME_KEY = "userName";
-    private static final String START_INSTANT_KEY = "startInstant";
-    private static final String TOTAL_CPU_DURATION_KEY = "totalCpuDuration";
-    private static final String COMMAND_KEY = "command";
-    private static final String SUPPORTS_NORMAL_TERMINATION_KEY = "supportsNormalTermination";
-    private static final String PARENT_PID_KEY = "parentPid";
-    private static final String HAS_CHILDREN_KEY = "hasChildren";
-    private static final String PROCESSES_KEY = "processes";
     private static final int PID_COLUMN_TABLE_INDEX = 4;
     private static final int COMMAND_COLUMN_NAME_INDEX = 0;
     public static final int NOT_SELECTING_PROCESS = 0;
     public static final int SELECTING_PROCESS = 1;
     private JScrollPane scrollPane;
     private JTable table;
-    private JLabel waitingLabel;
     /* Estos textos deben ser internacionalizados*/
     private final String[] tableHeaders;
     private I18n i18n;
     private DefaultTableModel tableModel;
     private JPopupMenu popupMenu;
-    private JMenuItem destroyProcessItem;
-    private JMenuItem restartProcessItem;
-    private RemoteProcessesPlayer player;
+    private ActionResultDialog actionResultDialog;
+    private JLabel newProcessLabel;
+    private JLabel newProcessErrorLabel;
+    private JTextField newProcessTextField;
+    private JButton newProcessButton;
+    private JPanel newProcessPanel;
     private int status;
 
     public RemoteProcessesPlayerPanel(){
         this.i18n = new I18n(RemoteProcessesPlayerPanel.class);
         this.tableHeaders = new String[6];
+        this.actionResultDialog = new ActionResultDialog();
+        this.actionResultDialog.setVisible(false);
+        this.setLayout(new GridBagLayout());
         this.initTableHeaders();
         this.initPopMenu();
+        this.initSearchBar();
         this.initTable();
+        this.addListeners();
         this.setVisible(true);
         this.status = NOT_SELECTING_PROCESS;
+    }
+
+    private void initSearchBar() {
+        this.newProcessPanel = new JPanel();
+        this.newProcessPanel.setLayout(new GridBagLayout());
+
+        this.newProcessLabel = new JLabel(this.i18n.s("newProcessLabelText"));
+        this.newProcessErrorLabel = new JLabel();
+        this.newProcessErrorLabel.setVisible(false);
+        this.newProcessTextField = new JTextField();
+        this.newProcessButton = new JButton(this.i18n.s("newProcessButtonText"));
+
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy= 0;
+        constraints.gridwidth = 1;
+        constraints.gridheight= 1;
+        constraints.weighty = 1.0;
+        constraints.weightx = 1.0;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.anchor = GridBagConstraints.WEST;
+        constraints.insets = new Insets(10,10,10,10);
+        this.newProcessPanel.add(this.newProcessLabel, constraints);
+
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 1;
+        constraints.gridwidth = 1;
+        constraints.gridheight = 1;
+        constraints.fill= GridBagConstraints.HORIZONTAL;
+        constraints.anchor = GridBagConstraints.WEST;
+        constraints.weightx = 1.0;
+        constraints.weighty = 1.0;
+        constraints.insets = new Insets(10,10,10,10);
+        this.newProcessPanel.add(this.newProcessTextField, constraints);
+
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 2;
+        constraints.gridwidth = 1;
+        constraints.gridheight = 1;
+        constraints.fill= GridBagConstraints.HORIZONTAL;
+        constraints.weighty = 1.0;
+        constraints.weightx = 1.0;
+        constraints.anchor = GridBagConstraints.WEST;
+        constraints.insets = new Insets(10,10,10,10);
+        this.newProcessPanel.add(this.newProcessErrorLabel, constraints);
+
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 3;
+        constraints.gridheight = 1;
+        constraints.gridwidth = 1;
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.anchor = GridBagConstraints.EAST;
+        constraints.weightx = 1.0;
+        constraints.weighty = 1.0;
+        constraints.insets = new Insets(10,10,10,10);
+        this.newProcessPanel.add(this.newProcessButton, constraints);
+
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        constraints.gridheight = 1;
+        constraints.gridwidth = 1;
+        constraints.weightx = 0.1;
+        constraints.weighty = 1.0;
+        constraints.anchor = GridBagConstraints.WEST;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.insets = new Insets(10,10,10,10);
+        this.add(this.newProcessPanel);
     }
 
     private void initPopMenu(){
         this.popupMenu = new JPopupMenu();
         String destroyProcessText = this.i18n.s("destroyProcess");
-        this.destroyProcessItem = new JMenuItem(destroyProcessText);
-        this.destroyProcessItem.addActionListener(e -> {
+        JMenuItem destroyProcessItem = new JMenuItem(destroyProcessText);
+        destroyProcessItem.addActionListener(e -> {
             int selectedRow = this.table.getSelectedRow();
             long selectedPID = Long.parseLong((String) this.table.getValueAt(selectedRow, PID_COLUMN_TABLE_INDEX));
-            this.sendMessage("destroy", selectedPID);
+            MessageSender.sendMessage("destroy", selectedPID, null);
             this.status = NOT_SELECTING_PROCESS;
         });
         String restartProcessText = this.i18n.s("restartProcess");
-        this.restartProcessItem = new JMenuItem(restartProcessText);
-        this.restartProcessItem.addActionListener(e -> {
+        JMenuItem restartProcessItem = new JMenuItem(restartProcessText);
+        restartProcessItem.addActionListener(e -> {
             int selectedRow = this.table.getSelectedRow();
             long selectedPID = Long.parseLong((String) this.table.getValueAt(selectedRow, PID_COLUMN_TABLE_INDEX));
-            this.sendMessage("restart", selectedPID);
+            MessageSender.sendMessage("restart", selectedPID, null);
             this.status = NOT_SELECTING_PROCESS;
         });
-        this.popupMenu.add(this.destroyProcessItem);
-        this.popupMenu.add(this.restartProcessItem);
+        this.popupMenu.add(destroyProcessItem);
+        this.popupMenu.add(restartProcessItem);
     }
 
     private void initTableHeaders(){
@@ -151,28 +212,38 @@ public class RemoteProcessesPlayerPanel extends JPanel {
             }
         });*/
         this.scrollPane = new JScrollPane(table);
-        this.add(this.scrollPane);
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = 1;
+        constraints.gridy = 0;
+        constraints.gridwidth = 1;
+        constraints.gridheight = 1;
+        constraints.weighty = 1.0;
+        constraints.weightx = 1.0;
+        constraints.insets = new Insets(10,10,10,10);
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.anchor = GridBagConstraints.EAST;
+        this.add(this.scrollPane, constraints);
     }
 
-    public void updateData(JsonObject processesSnapshotData){
-        Object[][] formattedProcessesData = this.parseData(processesSnapshotData);
+    public void updateData(Snapshot snapshot){
+        Object[][] formattedProcessesData = this.parseData(snapshot);
         this.tableModel.setDataVector(formattedProcessesData, this.tableHeaders);
         this.tableModel.fireTableRowsUpdated(1, formattedProcessesData.length);
     };
 
-    private Object[][] parseData(JsonObject processesSnapshotData){
-        JsonArray processes = processesSnapshotData.get(PROCESSES_KEY).getAsJsonArray();
+    private Object[][] parseData(Snapshot snapshot){
+        List<Process> processes = snapshot.getProcesses();
         int size = processes.size();
         Object[][] res = new Object[size][];
         for(int i=0 ; i < size; i++){
-            JsonObject process = processes.get(i).getAsJsonObject();
+            Process process = processes.get(i);
             String[] processData = new String[]{
-                    process.get(COMMAND_KEY).getAsString(),
-                    process.get(USER_NAME_KEY).getAsString(),
-                    process.get(START_INSTANT_KEY).getAsString(),
-                    process.get(TOTAL_CPU_DURATION_KEY).getAsString(),
-                    process.get(PID_KEY).getAsString(),
-                    process.get(PARENT_PID_KEY).getAsString()
+                    process.getCommand(),
+                    process.getUserName(),
+                    process.getStartInstant(),
+                    String.valueOf(process.getTotalCpuDuration()),
+                    String.valueOf(process.getPid()),
+                    String.valueOf(process.getParentPid())
             };
             res[i] = processData;
         }
@@ -188,24 +259,31 @@ public class RemoteProcessesPlayerPanel extends JPanel {
         this.table = null;
     }
 
-    public int getStatus(){
-        return this.status;
+    public int getStatus() {
+        return status;
     }
 
-    private void sendMessage(String action, long selectedProcessPID){
-        HashMap<String, Object> data = new HashMap<>();
-        Gson gson = new Gson();
-        ProcessRequest processRequest = new ProcessRequest();
-        processRequest.setAction(action);
-        processRequest.setSelectedProcessPID(selectedProcessPID);
-        data.put("data", gson.toJson(processRequest));
-        PetitionResponse petitionResponse = new PetitionResponse("procesos", data);
-        try {
-            ClientConnection.getInstance().getServer().send(petitionResponse);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        } catch (SocketException e) {
-            e.printStackTrace();
-        }
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public void displayMessage(String message){
+        this.actionResultDialog.setMessageLabelText(message);
+        this.actionResultDialog.showDialog();
+    }
+
+    private void addListeners(){
+        /* Manejar evento del boton de iniciar nuevo proceso..*/
+        this.newProcessButton.addActionListener(e -> {
+            this.newProcessErrorLabel.setText("");
+            this.newProcessErrorLabel.setVisible(false);
+            String newProcessPath = this.newProcessTextField.getText();
+            if(newProcessPath == null || newProcessPath.equals("")){
+                this.newProcessErrorLabel.setText(this.i18n.s("newProcessErrorLabelText"));
+                this.newProcessErrorLabel.setVisible(true);
+                return;
+            }
+            MessageSender.sendMessage("newProcess", 0, newProcessPath);
+        });
     }
 }

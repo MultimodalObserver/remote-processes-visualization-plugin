@@ -1,7 +1,6 @@
-package mo;
+package mo.visualization.process.plugin;
 
 import mo.communication.ClientConnection;
-import mo.communication.Command;
 import mo.communication.ConnectionListener;
 import mo.communication.PetitionResponse;
 import mo.communication.streaming.visualization.PlayableStreaming;
@@ -18,6 +17,11 @@ public class RemoteProcessesVisualizationConfiguration implements VisualizableSt
     private static final String[] CREATORS = new String[] {"mo.capture.process.plugin.ProcessRecorder"};
     private VisualizationConfiguration temporalConfig;
     private RemoteProcessesPlayer player;
+    public static final String CONTENT_MESSAGE_KEY = "data";
+    public static final String ERROR_MESSAGE_KEY = "error";
+    public static final String SUCCESS_MESSAGE_KEY = "success";
+    public static final String PLUGIN_MESSAGE_KEY = "procesos";
+
 
     public RemoteProcessesVisualizationConfiguration(VisualizationConfiguration temporalConfig){
         this.temporalConfig = temporalConfig;
@@ -26,41 +30,27 @@ public class RemoteProcessesVisualizationConfiguration implements VisualizableSt
 
     @Override
     public void onMessageReceived(Object o, PetitionResponse petitionResponse) {
-        if(petitionResponse.getType().equals(Command.DATA_STREAMING)){
+        if(petitionResponse.getType().equals(PLUGIN_MESSAGE_KEY)){
             /* Vemos que tipo de mensaje recibimos:
 
         - data --> info procesos enviada por el capturador
         - success --> se ejecuto exitosamente la accion que se envio en el servidor
         - error --> hubo error al ejecutar la accion
          */
-            if(petitionResponse.getHashMap().containsKey("data")){
-                String jsonData = petitionResponse.getHashMap().get("data").toString();
+            if(petitionResponse.getHashMap().containsKey(CONTENT_MESSAGE_KEY)){
+                String jsonData = petitionResponse.getHashMap().get(CONTENT_MESSAGE_KEY).toString();
                 this.player.setCurrentProcessesSnapshot(jsonData);
             }
-            else if(petitionResponse.getHashMap().containsKey("success")){
+            else if(petitionResponse.getHashMap().containsKey(SUCCESS_MESSAGE_KEY)){
                 //Manejamos el success
-                System.out.println(petitionResponse.getHashMap().get("success"));
+                System.out.println(petitionResponse.getHashMap().get(SUCCESS_MESSAGE_KEY));
+                this.player.getPanel().displayMessage(petitionResponse.getHashMap().get(SUCCESS_MESSAGE_KEY).toString());
             }
-            else if(petitionResponse.getHashMap().containsKey("error")){
-                System.out.println(petitionResponse.getHashMap().get("error"));
+            else if(petitionResponse.getHashMap().containsKey(ERROR_MESSAGE_KEY)){
+                System.out.println(petitionResponse.getHashMap().get(ERROR_MESSAGE_KEY));
+                this.player.getPanel().displayMessage(petitionResponse.getHashMap().get(ERROR_MESSAGE_KEY).toString());
             }
         }
-        /*if(!petitionResponse.getType().equals(Command.DATA_STREAMING)
-                && !petitionResponse.getType().equals("procesos")){
-            return;
-        }
-        else if(petitionResponse.getType().equals("procesos")){
-            System.out.println("MENSAJE DE PROCESOS");
-            System.out.println(petitionResponse.getHashMap().get("actionResponse"));
-            return;
-        }
-        CaptureEvent captureEvent = (CaptureEvent) petitionResponse.getHashMap().get("data");
-        if(!this.temporalConfig.getName().equals(captureEvent.getConfigId())){
-            return;
-        }
-        String data = String.valueOf(captureEvent.getContent());
-        this.player.setCurrentProcessesSnapshot(data);
-        */
     }
 
     @Override

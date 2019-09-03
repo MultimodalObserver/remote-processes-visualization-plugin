@@ -1,4 +1,4 @@
-package mo;
+package mo.visualization.process.plugin;
 
 import mo.communication.streaming.capture.CaptureConfig;
 import mo.communication.streaming.visualization.VisualizationStreamingProvider;
