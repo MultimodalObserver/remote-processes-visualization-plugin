@@ -4,7 +4,7 @@ import java.util.List;
 
 public class Snapshot {
     private List<Process> processes;
-    private Long captureMilliseconds;
+    private Long captureTimestamp;
 
     public List<Process> getProcesses() {
         return processes;
@@ -14,11 +14,11 @@ public class Snapshot {
         this.processes = processes;
     }
 
-    public Long getCaptureMilliseconds() {
-        return captureMilliseconds;
+    public Long getCaptureTimestamp() {
+        return captureTimestamp;
     }
 
-    public void setCaptureMilliseconds(Long captureMilliseconds) {
-        this.captureMilliseconds = captureMilliseconds;
+    public void setCaptureTimestamp(Long captureTimestamp) {
+        this.captureTimestamp = captureTimestamp;
     }
 }

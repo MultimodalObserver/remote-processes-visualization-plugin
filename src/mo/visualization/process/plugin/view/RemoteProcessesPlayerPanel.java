@@ -2,6 +2,7 @@ package mo.visualization.process.plugin.view;
 
 import mo.core.I18n;
 import mo.visualization.process.plugin.model.Process;
+import mo.visualization.process.plugin.model.Separator;
 import mo.visualization.process.plugin.model.Snapshot;
 import mo.visualization.process.util.MessageSender;
 
@@ -10,14 +11,16 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.List;
 
+/**
+ * @author Abraham
+ * @version 1.0.0
+ *  Class that shows a panel that contains a table with the processes that have been received. It also shows a section that allows you to start new processes
+ */
 public class RemoteProcessesPlayerPanel extends JPanel {
-    private static final int PID_COLUMN_TABLE_INDEX = 4;
-    private static final int COMMAND_COLUMN_NAME_INDEX = 0;
-    public static final int NOT_SELECTING_PROCESS = 0;
+    private static final int PID_COLUMN_TABLE_INDEX = 1;
+    private static final int NOT_SELECTING_PROCESS = 0;
     public static final int SELECTING_PROCESS = 1;
-    private JScrollPane scrollPane;
     private JTable table;
     /* Estos textos deben ser internacionalizados*/
     private final String[] tableHeaders;
@@ -25,12 +28,10 @@ public class RemoteProcessesPlayerPanel extends JPanel {
     private DefaultTableModel tableModel;
     private JPopupMenu popupMenu;
     private ActionResultDialog actionResultDialog;
-    private JLabel newProcessLabel;
     private JLabel newProcessErrorLabel;
     private JTextField newProcessTextField;
     private JButton newProcessButton;
-    private JPanel newProcessPanel;
-    private int status;
+    private volatile int status;
 
     public RemoteProcessesPlayerPanel(){
         this.i18n = new I18n(RemoteProcessesPlayerPanel.class);
@@ -47,11 +48,14 @@ public class RemoteProcessesPlayerPanel extends JPanel {
         this.status = NOT_SELECTING_PROCESS;
     }
 
+    /**
+     * Method that initializes the section that allows to start new processes
+     */
     private void initSearchBar() {
-        this.newProcessPanel = new JPanel();
-        this.newProcessPanel.setLayout(new GridBagLayout());
+        JPanel newProcessPanel = new JPanel();
+        newProcessPanel.setLayout(new GridBagLayout());
 
-        this.newProcessLabel = new JLabel(this.i18n.s("newProcessLabelText"));
+        JLabel newProcessLabel = new JLabel(this.i18n.s("newProcessLabelText"));
         this.newProcessErrorLabel = new JLabel();
         this.newProcessErrorLabel.setVisible(false);
         this.newProcessTextField = new JTextField();
@@ -67,7 +71,7 @@ public class RemoteProcessesPlayerPanel extends JPanel {
         constraints.fill = GridBagConstraints.HORIZONTAL;
         constraints.anchor = GridBagConstraints.WEST;
         constraints.insets = new Insets(10,10,10,10);
-        this.newProcessPanel.add(this.newProcessLabel, constraints);
+        newProcessPanel.add(newProcessLabel, constraints);
 
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
@@ -79,7 +83,7 @@ public class RemoteProcessesPlayerPanel extends JPanel {
         constraints.weightx = 1.0;
         constraints.weighty = 1.0;
         constraints.insets = new Insets(10,10,10,10);
-        this.newProcessPanel.add(this.newProcessTextField, constraints);
+        newProcessPanel.add(this.newProcessTextField, constraints);
 
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
@@ -91,7 +95,7 @@ public class RemoteProcessesPlayerPanel extends JPanel {
         constraints.weightx = 1.0;
         constraints.anchor = GridBagConstraints.WEST;
         constraints.insets = new Insets(10,10,10,10);
-        this.newProcessPanel.add(this.newProcessErrorLabel, constraints);
+        newProcessPanel.add(this.newProcessErrorLabel, constraints);
 
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
@@ -103,7 +107,7 @@ public class RemoteProcessesPlayerPanel extends JPanel {
         constraints.weightx = 1.0;
         constraints.weighty = 1.0;
         constraints.insets = new Insets(10,10,10,10);
-        this.newProcessPanel.add(this.newProcessButton, constraints);
+        newProcessPanel.add(this.newProcessButton, constraints);
 
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
@@ -115,16 +119,20 @@ public class RemoteProcessesPlayerPanel extends JPanel {
         constraints.anchor = GridBagConstraints.WEST;
         constraints.fill = GridBagConstraints.HORIZONTAL;
         constraints.insets = new Insets(10,10,10,10);
-        this.add(this.newProcessPanel);
+        this.add(newProcessPanel);
     }
 
+    /**
+     * Method that initializes the popup menu that is displayed when right clicking on a table row.
+     * The popup menu contains two items: destroy and restart process.
+     */
     private void initPopMenu(){
         this.popupMenu = new JPopupMenu();
         String destroyProcessText = this.i18n.s("destroyProcess");
         JMenuItem destroyProcessItem = new JMenuItem(destroyProcessText);
         destroyProcessItem.addActionListener(e -> {
             int selectedRow = this.table.getSelectedRow();
-            long selectedPID = Long.parseLong((String) this.table.getValueAt(selectedRow, PID_COLUMN_TABLE_INDEX));
+            long selectedPID = (long) this.table.getValueAt(selectedRow, PID_COLUMN_TABLE_INDEX);
             MessageSender.sendMessage("destroy", selectedPID, null);
             this.status = NOT_SELECTING_PROCESS;
         });
@@ -132,7 +140,7 @@ public class RemoteProcessesPlayerPanel extends JPanel {
         JMenuItem restartProcessItem = new JMenuItem(restartProcessText);
         restartProcessItem.addActionListener(e -> {
             int selectedRow = this.table.getSelectedRow();
-            long selectedPID = Long.parseLong((String) this.table.getValueAt(selectedRow, PID_COLUMN_TABLE_INDEX));
+            long selectedPID = (long) this.table.getValueAt(selectedRow, PID_COLUMN_TABLE_INDEX);
             MessageSender.sendMessage("restart", selectedPID, null);
             this.status = NOT_SELECTING_PROCESS;
         });
@@ -140,32 +148,26 @@ public class RemoteProcessesPlayerPanel extends JPanel {
         this.popupMenu.add(restartProcessItem);
     }
 
+    /**
+     * Method that initializes the table headers
+     */
     private void initTableHeaders(){
-        this.tableHeaders[0] = this.i18n.s("commandColumnName");
-        this.tableHeaders[1] = this.i18n.s("usernameColumnName");
-        this.tableHeaders[2] = this.i18n.s("startInstantColumnName");
-        this.tableHeaders[3] = this.i18n.s("totalCPUDurationColumnName");
-        this.tableHeaders[4] = this.i18n.s("pidColumnName");
+        this.tableHeaders[0] = this.i18n.s("applicationColumnName");
+        this.tableHeaders[1] = this.i18n.s("pidColumnName");
+        this.tableHeaders[2] = this.i18n.s("usernameColumnName");
+        this.tableHeaders[3] = this.i18n.s("startInstantColumnName");
+        this.tableHeaders[4] = this.i18n.s("totalCPUDurationColumnName");
         this.tableHeaders[5] = this.i18n.s("parentPidColumnName");
     }
 
+    /**
+     * Method that initializes the whole table
+     */
     private void initTable(){
-        /*this.tableModel = new DefaultTableModel(null, this.tableHeaders){
-            @Override
-            public boolean isCellEditable(int rowIndex, int colIndex) {
-                return colIndex != 0;
-            }
-        };
-        this.table = new JTable(this.tableModel){
-             @Override
-            public void changeSelection(int rowIndex, int colIndex, boolean toggle, boolean extend){
-                 if(convertColumnIndexToModel(colIndex) != 0){
-                     return;
-                 }
-                 super.changeSelection(rowIndex, colIndex, toggle, extend);
-             }
-        };*/
         this.tableModel = new DefaultTableModel();
+        for(String header: this.tableHeaders){
+            this.tableModel.addColumn(header);
+        }
         this.table = new JTable(this.tableModel);
         this.table.setFillsViewportHeight(true);
         this.table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -186,7 +188,6 @@ public class RemoteProcessesPlayerPanel extends JPanel {
                     return;
                 }
                 RemoteProcessesPlayerPanel.this.table.setRowSelectionInterval(currentRow, currentRow);
-                //System.out.println("SE APRETO LA FILA " + currentRow);
                 RemoteProcessesPlayerPanel.this.status = SELECTING_PROCESS;
             }
 
@@ -205,13 +206,7 @@ public class RemoteProcessesPlayerPanel extends JPanel {
 
             }
         });
-        /*this.table.getColumnModel().setSelectionModel(new DefaultListSelectionModel(){
-            @Override
-            public boolean isSelectedIndex(int index){
-                return RemoteProcessesPlayerPanel.this.table.convertColumnIndexToModel(index) == 0;
-            }
-        });*/
-        this.scrollPane = new JScrollPane(table);
+        JScrollPane scrollPane = new JScrollPane(table);
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridx = 1;
         constraints.gridy = 0;
@@ -222,56 +217,53 @@ public class RemoteProcessesPlayerPanel extends JPanel {
         constraints.insets = new Insets(10,10,10,10);
         constraints.fill = GridBagConstraints.BOTH;
         constraints.anchor = GridBagConstraints.EAST;
-        this.add(this.scrollPane, constraints);
+        this.add(scrollPane, constraints);
     }
 
+    /**Method that update the data displayed in the table, using a processes @see(Snapshot)
+     * @param snapshot The Snapshot or processes that will be displayed on the table
+     */
     public void updateData(Snapshot snapshot){
-        Object[][] formattedProcessesData = this.parseData(snapshot);
-        this.tableModel.setDataVector(formattedProcessesData, this.tableHeaders);
-        this.tableModel.fireTableRowsUpdated(1, formattedProcessesData.length);
-    };
-
-    private Object[][] parseData(Snapshot snapshot){
-        List<Process> processes = snapshot.getProcesses();
-        int size = processes.size();
-        Object[][] res = new Object[size][];
-        for(int i=0 ; i < size; i++){
-            Process process = processes.get(i);
-            String[] processData = new String[]{
-                    process.getCommand(),
-                    process.getUserName(),
-                    process.getStartInstant(),
-                    String.valueOf(process.getTotalCpuDuration()),
-                    String.valueOf(process.getPid()),
-                    String.valueOf(process.getParentPid())
-            };
-            res[i] = processData;
-        }
-        return res;
-    }
-
-    public void removeTable(){
-        if(this.scrollPane == null){
+        if(snapshot == null || snapshot.getProcesses().isEmpty()){
             return;
         }
-        this.remove(this.scrollPane);
-        this.scrollPane = null;
-        this.table = null;
+        SwingUtilities.invokeLater(() -> {
+            this.clearTable();
+            for(Process process : snapshot.getProcesses()){
+                Object[] values = new Object[]{
+                        this.getApplicationName(process),
+                        process.getPid(),
+                        process.getUserName(),
+                        process.getStartInstant(),
+                        process.getTotalCpuDuration(),
+                        process.getParentPid()
+                };
+                this.tableModel.addRow(values);
+            }
+        });
     }
 
+
+    /**Method that get the actual status of the panel
+     * @return status of the panel: selecting or not selecting a process (row of the table)
+     */
     public int getStatus() {
-        return status;
+        return this.status;
     }
 
-    public void setStatus(int status) {
-        this.status = status;
-    }
-
+    /**
+     * Method that displays the action result dialog associated with the panel.
+     * The dialog is shown after a item of the popup menu is pressed.
+     * @param message The message that will be shown in the dialog.
+     */
     public void displayMessage(String message){
         this.actionResultDialog.setMessageLabelText(message);
         this.actionResultDialog.showDialog();
     }
 
+    /**
+     *
+     */
     private void addListeners(){
         /* Manejar evento del boton de iniciar nuevo proceso..*/
         this.newProcessButton.addActionListener(e -> {
@@ -285,5 +277,19 @@ public class RemoteProcessesPlayerPanel extends JPanel {
             }
             MessageSender.sendMessage("newProcess", 0, newProcessPath);
         });
+    }
+
+    private String getApplicationName(Process process){
+        if(process == null || process.getCommand() == null || process.getCommand().isEmpty()){
+            return null;
+        }
+        String separator = process.getCommand().contains(Separator.WINDOWS_FILE.getValue()) ? Separator.REGEX_WINDOW_FILE.getValue()
+                : Separator.FILE.getValue();
+        String[] parts = process.getCommand().split(separator);
+        return parts[parts.length - 1];
+    }
+
+    private void clearTable(){
+        this.tableModel.setRowCount(0);
     }
 }

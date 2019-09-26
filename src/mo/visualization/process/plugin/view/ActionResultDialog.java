@@ -6,15 +6,22 @@ import mo.core.ui.Utils;
 import javax.swing.*;
 import java.awt.*;
 
-public class ActionResultDialog extends JDialog {
+/**
+ * @author Abraham
+ * @version 1.0.0
+ *
+ *
+Class that displays a panel with a result message after creating a new process or restarting or destroying an existing process
+ */
+
+class ActionResultDialog extends JDialog {
 
     private JLabel messageLabel;
-    private I18n i18n;
 
-    public ActionResultDialog(){
+    ActionResultDialog(){
         super(null, "Estado del proceso", ModalityType.APPLICATION_MODAL);
-        this.i18n = new I18n(ActionResultDialog.class);
-        this.setTitle(this.i18n.s("actionResultDialogTitle"));
+        I18n i18n = new I18n(ActionResultDialog.class);
+        this.setTitle(i18n.s("actionResultDialogTitle"));
         this.initComponents();
         this.addComponents();
     }
@@ -38,7 +45,7 @@ public class ActionResultDialog extends JDialog {
         contentPane.add(this.messageLabel, constraints);
     }
 
-    public void showDialog(){
+    void showDialog(){
         this.setMinimumSize(new Dimension(300, 150));
         this.setPreferredSize(new Dimension(300, 150));
         this.pack();
@@ -47,10 +54,8 @@ public class ActionResultDialog extends JDialog {
         this.setVisible(true);
     }
 
-    public void setMessageLabelText(String message){
+    void setMessageLabelText(String message){
         this.messageLabel.setText(message);
     }
-
-
 
 }
